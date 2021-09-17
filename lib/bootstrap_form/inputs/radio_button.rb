@@ -9,16 +9,20 @@ module BootstrapForm
       included do
         def radio_button_with_bootstrap(name, value, *args)
           options = args.extract_options!.symbolize_keys!
-          radio_button_options = options.except(:class, :label, :label_class, :error_message, :help,
-                                                :inline, :custom, :hide_label, :skip_label, :wrapper_class)
+          args << options.except(:label, :label_class, :help, :inline)
 
-          radio_button_options[:class] = radio_button_classes(name, options)
+          html = radio_button_without_bootstrap(name, value, *args) + " " + options[:label]
 
-          tag.div(class: radio_button_wrapper_class(options)) do
-            html = radio_button_without_bootstrap(name, value, radio_button_options)
-            html.concat(radio_button_label(name, value, options)) unless options[:skip_label]
-            html.concat(generate_error(name)) if options[:error_message]
-            html
+          disabled_class = " disabled" if options[:disabled]
+          label_class    = options[:label_class]
+
+          if options[:inline]
+            label_class = " #{label_class}" if label_class
+            label(name, html, class: "radio-inline#{disabled_class}#{label_class}", value: value)
+          else
+            content_tag(:div, class: "radio#{disabled_class}") do
+              label(name, html, value: value, class: label_class)
+            end
           end
         end
 

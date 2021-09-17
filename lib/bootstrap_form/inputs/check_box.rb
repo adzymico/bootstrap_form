@@ -7,17 +7,27 @@ module BootstrapForm
       include Base
 
       included do
-        def check_box_with_bootstrap(name, options={}, checked_value="1", unchecked_value="0", &block)
+        def check_box_with_bootstrap(name, options={}, checked_value='1', unchecked_value='0', &block)
           options = options.symbolize_keys!
-          check_box_options = options.except(:class, :label, :label_class, :error_message, :help,
-                                             :inline, :custom, :hide_label, :skip_label, :wrapper_class)
-          check_box_options[:class] = check_box_classes(name, options)
+          check_box_options = options.except(:label, :label_class, :help, :inline)
 
-          tag.div(class: check_box_wrapper_class(options)) do
-            html = check_box_without_bootstrap(name, check_box_options, checked_value, unchecked_value)
-            html.concat(check_box_label(name, options, checked_value, &block)) unless options[:skip_label]
-            html.concat(generate_error(name)) if options[:error_message]
-            html
+          html = check_box_without_bootstrap(name, check_box_options, checked_value, unchecked_value)
+          label_content = block_given? ? capture(&block) : options[:label]
+          html.concat(' ').concat(label_content || (object && object.class.human_attribute_name(name)) || name.to_s.humanize)
+
+          label_name = name
+          label_name = "#{name}_#{checked_value}" if options[:multiple]
+
+          disabled_class = ' disabled' if options[:disabled]
+          label_class    = options[:label_class]
+
+          if options[:inline]
+            label_class = " #{label_class}" if label_class
+            label(label_name, html, class: "checkbox-inline#{disabled_class}#{label_class}")
+          else
+            content_tag(:div, class: "checkbox#{disabled_class}") do
+              label(label_name, html, class: label_class)
+            end
           end
         end
 
@@ -70,7 +80,7 @@ module BootstrapForm
         if options[:custom]
           classes << custom_check_box_wrapper_class(options)
         else
-          classes << "form-check"
+          classes << "checkbox"
           classes << "form-check-inline" if layout_inline?(options[:inline])
         end
         classes << options[:wrapper_class] if options[:wrapper_class].present?

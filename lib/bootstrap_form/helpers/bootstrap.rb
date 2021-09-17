@@ -87,8 +87,8 @@ module BootstrapForm
         input = attach_input(options, :prepend) + input + attach_input(options, :append)
         input += generate_error(name)
         options.present? &&
-          input = tag.div(input, class: ["input-group", options[:input_group_class]].compact)
-        input
+          input = content_tag(:div, input, class: ["input-group", options[:input_group_class]].compact)
+        ActiveSupport::SafeBuffer.new(input.to_s.gsub('input-group-append', 'input-group-addon'))
       end
 
       def input_with_error(name, &block)
